@@ -1,6 +1,8 @@
 <?php
 namespace app\controller;
 
+use think\helper\Str;
+use think\facade\Env;
 use think\facade\View;
 use Carbon\Carbon;
 use app\model\Azure;
@@ -16,7 +18,12 @@ class UserAzureServer extends UserBase
 {
     public function index()
     {
-        $servers = AzureServer::where('user_id', session('user_id'))->select();
+        $limit = Env::get('APP.paginate') ?? '15';
+        $pages_num = (input('page') == '') ? '1' : input('page');
+        $servers_num = AzureServer::where('user_id', session('user_id'))->count();
+        $servers = AzureServer::where('user_id', session('user_id'))
+        ->order('id', 'desc')
+        ->paginate($limit);
 
         foreach($servers as $server)
         {
@@ -28,8 +35,12 @@ class UserAzureServer extends UserBase
             }
         }
 
-        View::assign('count', 0);
+        $page = $servers->render();
+        $count = $servers_num - (($pages_num - 1) * $limit);
+
+        View::assign('page', $page);
         View::assign('servers', $servers);
+        View::assign('count', $count);
         return View::fetch('../app/view/user/azure/server/index.html');
     }
 
@@ -154,6 +165,14 @@ class UserAzureServer extends UserBase
         // 脚本检查
         $vm_script = ($vm_script == '') ? 'null' : base64_encode($vm_script);
 
+        // 硬盘大小检查
+        $images = AzureList::images();
+        if (Str::contains($vm_image, 'Win') && !Str::contains($images[$vm_image]['sku'], 'smalldisk') && $vm_disk_size < '127') {
+            return json(Tools::msg('0', '创建失败', '此 Windows 系统镜像要求硬盘大小不低于 127 GB'));
+        }
+
+        // return json(Tools::msg('0', '创建检查完成', '没有发现问题'));
+
         $create_step_count = 0;
         // 步骤数 = (创建数量 * 创建一台的流程数) + 将虚拟机加入列表这一步骤
         $number_of_steps = (count($names) * 6) + 2;
@@ -193,7 +212,7 @@ class UserAzureServer extends UserBase
                     $account, $vm_resource_group_name, $vm_location
                 );
 
-                sleep(1);
+                sleep(2);
 
                 // (2/6) 创建公网地址
                 $text = '在资源组 ' . $vm_resource_group_name . ' 中创建公网地址';

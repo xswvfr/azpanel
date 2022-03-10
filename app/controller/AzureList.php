@@ -36,29 +36,20 @@ class AzureList
                 'version' => 'latest',
                 'offer' => 'debian-11',
             ],
-            // Publishers/Canonical/ArtifactTypes/VMImage/Offers/0001-com-ubuntu-pro-trusty/Skus/pro-14_04-lts
-            'Ubuntu_14_04' => [
-                'display' => 'Ubuntu 14.04',
-                'sku' => 'pro-14_04-lts',
-                'publisher' => 'Canonical',
-                'version' => 'latest',
-                'offer' => '0001-com-ubuntu-pro-trusty',
-            ],
-            // Publishers/Canonical/ArtifactTypes/VMImage/Offers/0001-com-ubuntu-pro-xenial/Skus/pro-16_04-lts-gen2
+            // az vm image list --publisher Canonical --offer UbuntuServer --all --output table
             'Ubuntu_16_04' => [
                 'display' => 'Ubuntu 16.04',
-                'sku' => 'pro-16_04-lts-gen2',
+                'sku' => '16_04-lts-gen2',
                 'publisher' => 'Canonical',
                 'version' => 'latest',
-                'offer' => '0001-com-ubuntu-pro-xenial',
+                'offer' => 'UbuntuServer',
             ],
-            // Publishers/Canonical/ArtifactTypes/VMImage/Offers/0001-com-ubuntu-pro-bionic/Skus/pro-18_04-lts-gen2
             'Ubuntu_18_04' => [
                 'display' => 'Ubuntu 18.04',
-                'sku' => 'pro-18_04-lts-gen2',
+                'sku' => '18_04-lts-gen2',
                 'publisher' => 'Canonical',
                 'version' => 'latest',
-                'offer' => '0001-com-ubuntu-pro-bionic',
+                'offer' => 'UbuntuServer',
             ],
             // Publishers/Canonical/ArtifactTypes/VMImage/Offers/0001-com-ubuntu-server-focal/Skus/20_04-lts-gen2
             'Ubuntu_20_04' => [
@@ -68,7 +59,7 @@ class AzureList
                 'version' => 'latest',
                 'offer' => '0001-com-ubuntu-server-focal',
             ],
-            // Providers/Microsoft.Compute/Locations/eastasia/Publishers/OpenLogic/ArtifactTypes/VMImage/Offers/CentOS/Skus/7_9-gen2
+            // Publishers/OpenLogic/ArtifactTypes/VMImage/Offers/CentOS/Skus/7_9-gen2
             'Centos_79' => [
                 'display' => 'Centos 7.9',
                 'sku' => '7_9-gen2',
@@ -83,6 +74,51 @@ class AzureList
                 'publisher' => 'OpenLogic',
                 'version' => 'latest',
                 'offer' => 'CentOS',
+            ],
+            // az vm image list --publisher MicrosoftWindowsServer --all --output table
+            'WinData_2022' => [
+                'display' => 'Windows Datacenter 2022',
+                'sku' => '2022-Datacenter-smalldisk',
+                'publisher' => 'MicrosoftWindowsServer',
+                'version' => 'latest',
+                'offer' => 'WindowsServer',
+            ],
+            'WinData_2019' => [
+                'display' => 'Windows Datacenter 2019',
+                'sku' => '2019-Datacenter-smalldisk',
+                'publisher' => 'MicrosoftWindowsServer',
+                'version' => 'latest',
+                'offer' => 'WindowsServer',
+            ],
+            'WinData_2016' => [
+                'display' => 'Windows Datacenter 2016',
+                'sku' => '2016-Datacenter-smalldisk',
+                'publisher' => 'MicrosoftWindowsServer',
+                'version' => 'latest',
+                'offer' => 'WindowsServer',
+            ],
+            'WinData_2012' => [
+                'display' => 'Windows Datacenter 2012',
+                'sku' => '2012-Datacenter-smalldisk',
+                'publisher' => 'MicrosoftWindowsServer',
+                'version' => 'latest',
+                'offer' => 'WindowsServer',
+            ],
+            // az vm image list --publisher MicrosoftWindowsDesktop --offer windows-10 --all --output table
+            'WinDesk_10' => [
+                'display' => 'Windows 10 21H2',
+                'sku' => 'win10-21h2-pro-zh-cn-g2',
+                'publisher' => 'MicrosoftWindowsDesktop',
+                'version' => 'latest',
+                'offer' => 'Windows-10',
+            ],
+            // az vm image list --publisher MicrosoftWindowsDesktop --offer windows-11 --all --output table
+            'WinDesk_11' => [
+                'display' => 'Windows 11 21H2',
+                'sku' => 'win11-21h2-pro-zh-cn',
+                'publisher' => 'MicrosoftWindowsDesktop',
+                'version' => 'latest',
+                'offer' => 'Windows-11',
             ],
         ];
 

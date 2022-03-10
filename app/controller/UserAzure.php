@@ -1,6 +1,7 @@
 <?php
 namespace app\controller;
 
+use think\facade\Env;
 use think\facade\View;
 use app\controller\Tools;
 use app\controller\AzureApi;
@@ -12,9 +13,18 @@ class UserAzure extends UserBase
 {
     public function index()
     {
-        $accounts = Azure::where('user_id', session('user_id'))->select();
+        $limit = Env::get('APP.paginate') ?? '15';
+        $pages_num = (input('page') == '') ? '1' : input('page');
+        $accounts_num = Azure::where('user_id', session('user_id'))->count();
+        $accounts = Azure::where('user_id', session('user_id'))
+        ->order('id', 'desc')
+        ->paginate($limit);
 
-        View::assign('count', 0);
+        $page = $accounts->render();
+        $count = $accounts_num - (($pages_num - 1) * $limit);
+
+        View::assign('page', $page);
+        View::assign('count', $count);
         View::assign('accounts', $accounts);
         return View::fetch('../app/view/user/azure/index.html');
     }
@@ -27,10 +37,11 @@ class UserAzure extends UserBase
     public function read($id)
     {
         $account = Azure::where('user_id', session('user_id'))->find($id);
+        $az_sub = json_decode($account->az_sub, true);
+
         if ($account == null) {
             return View::fetch('../app/view/user/reject.html');
         }
-        $az_sub = json_decode($account->az_sub, true);
 
         View::assign('az_sub', $az_sub);
         View::assign('account', $account);
@@ -40,13 +51,24 @@ class UserAzure extends UserBase
     public function edit($id)
     {
         $account = Azure::where('user_id', session('user_id'))->find($id);
+        $az_api = json_decode($account->az_api, true);
+
         if ($account == null) {
             return View::fetch('../app/view/user/reject.html');
         }
-        $az_api = json_decode($account->az_api, true);
+
+        $share = [
+            'login_user' => $account->az_email,
+            'login_passwd' => $account->az_passwd,
+            'subscription_id' => $account->az_sub_id,
+            'appId' => $az_api['appId'],
+            'password' => $az_api['password'],
+            'tenant' => $az_api['tenant']
+        ];
 
         View::assign('az_api', $az_api);
         View::assign('account', $account);
+        View::assign('share', json_encode($share));
         return View::fetch('../app/view/user/azure/edit.html');
     }
 
@@ -107,7 +129,7 @@ class UserAzure extends UserBase
         $az_api_tenant_id = $configs['tenant']   ?? $az_tenant_id ?? null;
 
         // 如果长度不符
-        if (strlen($az_app_id) != 36 || strlen($az_tenant_id) != 36 || strlen($az_secret) != 34 ) {
+        if (strlen($az_api_app_id) != 36 || strlen($az_api_tenant_id) != 36 || strlen($az_api_secret) != 34 ) {
             return json(Tools::msg('0', '添加失败', '某项参数长度不符'));
         }
 
@@ -315,9 +337,13 @@ class UserAzure extends UserBase
             return View::fetch('../app/view/user/reject.html');
         }
 
-        $resources = AzureApi::getAzureResourceGroupsList($id);
+        $count = 0;
+        $resources = AzureApi::getAzureResourceGroupsList($id, $account->az_sub_id);
+        $virtual_machines = AzureApi::getAzureVirtualMachinesList($id, $account->az_sub_id);
 
+        View::assign('count', $count);
         View::assign('resources', $resources);
+        View::assign('virtual_machines', $virtual_machines);
         return View::fetch('../app/view/user/azure/resources.html');
     }
 
