@@ -140,7 +140,7 @@ DROP TABLE IF EXISTS `user`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `email` text COLLATE utf8mb4_general_ci NOT NULL COMMENT '邮箱地址',
+  `email` varchar(128) NOT NULL COMMENT '邮箱地址',
   `passwd` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '密码',
   `status` int NOT NULL DEFAULT '1' COMMENT '账户状态',
   `notify_email` text COLLATE utf8mb4_general_ci COMMENT '用户通知邮箱',
@@ -151,7 +151,8 @@ CREATE TABLE `user` (
   `personalise` text COLLATE utf8mb4_general_ci COMMENT '用户偏好',
   `created_at` int NOT NULL COMMENT '创建时间',
   `updated_at` int NOT NULL COMMENT '更新时间',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `verify`;

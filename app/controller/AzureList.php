@@ -1,6 +1,7 @@
 <?php
 namespace app\controller;
 
+use think\helper\Str;
 use app\controller\Ip;
 
 class AzureList
@@ -134,56 +135,79 @@ class AzureList
                 'cpu' => '1',
                 'memory' => '0.5',
                 'cost' => 0.0052 * 720,
+                'acc' => false,
             ],
             'Standard_B1s' => [
                 'cpu' => '1',
                 'memory' => '1',
                 'cost' => 0.0104 * 720,
+                'acc' => false,
             ],
             'Standard_B1ms' => [
                 'cpu' => '1',
                 'memory' => '2',
                 'cost' => 0.0207 * 720,
+                'acc' => false,
             ],
             'Standard_B2s' => [
                 'cpu' => '2',
                 'memory' => '4',
                 'cost' => 0.0416 * 720,
+                'acc' => false,
             ],
             'Standard_B2ms' => [
                 'cpu' => '2',
                 'memory' => '8',
                 'cost' => 0.0832 * 720,
+                'acc' => false,
             ],
             'Standard_B4ms' => [
                 'cpu' => '4',
                 'memory' => '16',
                 'cost' => 0.1660 * 720,
+                'acc' => false,
             ],
             'Standard_F1s' => [
                 'cpu' => '1',
                 'memory' => '2',
                 'cost' => 0.0497 * 720,
-            ],
-            'Standard_F2s' => [
-                'cpu' => '2',
-                'memory' => '4',
-                'cost' => 0.0990 * 720,
+                'acc' => true,
             ],
             'Standard_F2s_v2' => [
                 'cpu' => '2',
                 'memory' => '4',
                 'cost' => 0.0846 * 720,
-            ],
-            'Standard_F4s' => [
-                'cpu' => '4',
-                'memory' => '8',
-                'cost' => 0.1990 * 720,
+                'acc' => true,
             ],
             'Standard_F4s_v2' => [
                 'cpu' => '4',
                 'memory' => '8',
                 'cost' => 0.1690 * 720,
+                'acc' => true,
+            ],
+            'Standard_F8s_v2' => [
+                'cpu' => '8',
+                'memory' => '16',
+                'cost' => 0.3380 * 720,
+                'acc' => true,
+            ],
+            'Standard_DS1_v2' => [
+                'cpu' => '1',
+                'memory' => '3.5',
+                'cost' => 0.0730 * 720,
+                'acc' => true,
+            ],
+            'Standard_DS2_v2' => [
+                'cpu' => '2',
+                'memory' => '7',
+                'cost' => 0.1460 * 720,
+                'acc' => true,
+            ],
+            'Standard_DS3_v2' => [
+                'cpu' => '4',
+                'memory' => '14',
+                'cost' => 0.2930 * 720,
+                'acc' => true,
             ],
         ];
 
@@ -244,16 +268,77 @@ class AzureList
 
     public static function defaultPersonalise()
     {
+        $user = Str::random($length = 8);
+        $user = Str::lower($user);
+
         $personalise = [
             'vm_size'                => 'Standard_B2s',
             'vm_image'               => 'Debian_11',
             'vm_location'            => 'eastasia',
             'vm_disk_size'           => '32',
             'vm_default_script'      => '',
-            'vm_default_identity'    => 'azuser',
+            'vm_default_identity'    => $user,
             'vm_default_credentials' => 'Azure123456789',
         ];
 
         return json_encode($personalise);
+    }
+
+    public static function diskSizes()
+    {
+        $sizes = [
+            '32',
+            '64',
+            '128',
+            '256',
+            '512',
+            '1024',
+            '2048',
+            '4095',
+        ];
+
+        return $sizes;
+    }
+
+    public static function diskTiers()
+    {
+        // https://azure.microsoft.com/en-us/pricing/details/managed-disks/
+
+        $lists = [
+            'P4' => [
+                'diskMBpsReadWrite' => 25,
+                'diskIOPSReadWrite' => 120,
+            ],
+            'P6' => [
+                'diskMBpsReadWrite' => 50,
+                'diskIOPSReadWrite' => 240,
+            ],
+            'P10' => [
+                'diskMBpsReadWrite' => 100,
+                'diskIOPSReadWrite' => 500,
+            ],
+            'P15' => [
+                'diskMBpsReadWrite' => 125,
+                'diskIOPSReadWrite' => 1100,
+            ],
+            'P20' => [
+                'diskMBpsReadWrite' => 250,
+                'diskIOPSReadWrite' => 2300,
+            ],
+            'P30' => [
+                'diskMBpsReadWrite' => 250,
+                'diskIOPSReadWrite' => 5000,
+            ],
+            'P40' => [
+                'diskMBpsReadWrite' => 250,
+                'diskIOPSReadWrite' => 7500,
+            ],
+            'P50' => [
+                'diskMBpsReadWrite' => 250,
+                'diskIOPSReadWrite' => 7500,
+            ],
+        ];
+
+        return $lists;
     }
 }

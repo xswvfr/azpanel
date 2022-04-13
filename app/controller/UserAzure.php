@@ -3,6 +3,7 @@ namespace app\controller;
 
 use think\facade\Env;
 use think\facade\View;
+use GuzzleHttp\Client;
 use app\controller\Tools;
 use app\controller\AzureApi;
 use app\controller\UserTask;
@@ -45,6 +46,7 @@ class UserAzure extends UserBase
 
         View::assign('az_sub', $az_sub);
         View::assign('account', $account);
+        View::assign('locations', AzureList::locations());
         return View::fetch('../app/view/user/azure/read.html');
     }
 
@@ -84,6 +86,14 @@ class UserAzure extends UserBase
 
         if (strpos($quotaId, 'FreeTrial') !== false) {
             return 'FreeTrial';
+        }
+
+        if (strpos($quotaId, 'Sponsorship') !== false) {
+            return 'Azure 3500';
+        }
+
+        if (strpos($quotaId, 'Visual Studio Enterprise') !== false) {
+            return 'VS Enterprise';
         }
 
         return 'Unknown';
@@ -151,6 +161,9 @@ class UserAzure extends UserBase
 
         try {
             $sub_info = AzureApi::getAzureSubscription($account->id); // array
+            if ($sub_info['count']['value'] == '0') {
+                throw new \Exception('此账户无有效订阅。若有，请使用以下命令获取 Api 参数 <div class="mdui-typo"><code>az ad sp create-for-rbac --role contributor</code></div> ');
+            }
         } catch (\Exception $e) {
             Azure::destroy($account->id);
             return json(Tools::msg('0', '添加失败', $e->getMessage()));
@@ -170,6 +183,9 @@ class UserAzure extends UserBase
             $account->providers_register = '1';
             $account->save();
         }
+
+        $client = new Client();
+        AzureApi::registerMainAzureProviders($client, $account, 'Microsoft.Capacity');
 
         return json(Tools::msg('1', '添加结果', $content));
     }
@@ -327,6 +343,14 @@ class UserAzure extends UserBase
             return json(Tools::msg('0', '删除失败', $e->getMessage()));
         }
 
+        $resource_group = explode('/', $url);
+        $subscriptions = $resource_group['2'];
+        $resource_group = end($resource_group);
+
+        AzureServer::where('at_subscription_id', $subscriptions)
+        ->where('resource_group', $resource_group)
+        ->delete();
+
         return json(Tools::msg('1', '删除结果', '删除所有资源需要 3~5 分钟完成'));
     }
 
@@ -339,7 +363,7 @@ class UserAzure extends UserBase
 
         $count = 0;
         $resources = AzureApi::getAzureResourceGroupsList($id, $account->az_sub_id);
-        $virtual_machines = AzureApi::getAzureVirtualMachinesList($id, $account->az_sub_id);
+        $virtual_machines = AzureApi::readAzureVirtualMachinesList($id, $account->az_sub_id);
 
         View::assign('count', $count);
         View::assign('resources', $resources);
@@ -354,9 +378,35 @@ class UserAzure extends UserBase
             return View::fetch('../app/view/user/reject.html');
         }
 
-        $groups = AzureApi::getAzureResourceGroup($id, $name);
+        $groups = AzureApi::getAzureResourceGroup($account, $name);
 
         View::assign('groups', $groups);
         return View::fetch('../app/view/user/azure/groups.html');
+    }
+
+    public function QueryAccountQuota($id)
+    {
+        $account = Azure::find($id);
+        $location = input('location');
+
+        if ($account->reg_capacity == 0) {
+            $client = new Client();
+            AzureApi::registerMainAzureProviders($client, $account, 'Microsoft.Capacity');
+            $account->reg_capacity = 1;
+            $account->save();
+        }
+
+        $data = [];
+        $result = AzureApi::getQuota($account, $location);
+        foreach ($result['value'] as $item) {
+            $array['note']  = $item['properties']['name']['localizedValue'];
+            $array['name']  = $item['properties']['name']['value'];
+            $array['usage'] = $item['properties']['currentValue'];
+            $array['limit'] = $item['properties']['limit'];
+            array_push($data, $array);
+        }
+
+        array_multisort(array_column($data, 'limit'), SORT_DESC, $data);
+        return json(['result' => $data]);
     }
 }

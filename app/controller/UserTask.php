@@ -5,12 +5,13 @@ use app\model\Task;
 
 class UserTask
 {
-    public static function create($user_id, $name)
+    public static function create($user_id, $name, $params = null)
     {
         $task = new Task;
         $msg = [];
         $task->user_id     = $user_id;
         $task->name        = $name;
+        $task->params      = $params;
         $task->schedule    = '0';
         $task->status      = 'created';
         $task->current     = '任务已创建';
@@ -32,7 +33,7 @@ class UserTask
         $task = Task::find($task_id);
         return $task;
     }
-    
+
     public static function ajaxQuery()
     {
         $task = Task::where('user_id', session('user_id'))
@@ -67,23 +68,32 @@ class UserTask
         $task->save();
     }
 
-    public static function end($task_id, $crash)
+    public static function end($task_id, $crash, $error = null, $cancel = false)
     {
         $task = Task::find($task_id);
         $total = json_decode($task->total, true);
 
         if ($crash == true) {
-            $task->status = 'terminated';
-            $task->current = '任务出错';
+            if ($cancel == false) {
+                $task->status = 'terminated';
+                $task->current = '任务出错';
+            } else {
+                $task->status = 'cancelled';
+                $task->current = '任务已取消';
+            }
         } else {
             $task->status = 'completed';
             $task->schedule = '100';
             $task->current = '任务已完成';
         }
-        
+
+        if ($error != null) {
+            $task->error = $error;
+        }
+
         $info = [
             'time' => time(),
-            'info' => ($crash == true) ? '任务出错' : '任务已完成'
+            'info' => $task->current
         ];
         array_push($total, $info);
 
